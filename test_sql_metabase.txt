@@ -51,16 +51,24 @@ group by state;
 
 --Number of appointments completed or cancelled , cancellation rate
 
-select clinic_id, count(1) as total_appointsments
-,COUNT(CASE WHEN appointment.state = 'completed' or appointment.state = 'cancelled' THEN 1  end) AS completed_or_cancelled_number
-,COUNT(CASE WHEN appointment.state = 'completed' THEN 1  end) AS completed_number
-,COUNT(CASE WHEN appointment.state = 'cancelled' THEN 1  end) AS cancelled_number
-,count(1) FILTER (WHERE appointment.state = 'scheduled') AS scheduled_number
-,(COUNT(CASE WHEN appointment.state = 'cancelled' THEN 1 end)/count(1))*100 as cancellelation_rate
+select clinic_id
+, clinic.city
+, clinic.type
+,count(1) as total_appointments
+,count(1) FILTER (WHERE appointment.state in('completed','cancelled')) AS completed_or_cancelled_number
+--,COUNT(CASE WHEN appointment.state = 'completed' THEN 1  end) AS completed_number
+--,COUNT(CASE WHEN appointment.state = 'cancelled' THEN 1  end) AS cancelled_number
+--,count(1) FILTER (WHERE appointment.state = 'scheduled') AS scheduled_number
+, count(1) FILTER (WHERE appointment.state = 'completed' and appointment.type = 'scan') AS completed_scans
+, count(1) FILTER (WHERE appointment.state = 'cancelled' and appointment.type = 'scan') AS cancelled_scans
+, count(1) FILTER (WHERE appointment.state = 'completed' and appointment.type = 'refinement') AS completed_refinement
+, count(1) FILTER (WHERE appointment.state = 'cancelled' and appointment.type = 'refinement') AS cancelled_refinement
+,(count(1) FILTER (WHERE appointment.state = 'cancelled')/count(1))*100 as cancellelation_rate
 from appointment
 left join clinic
 on clinic.id = appointment.clinic_id
-group by clinic_id
+group by clinic_id, clinic.city, clinic.type
+order by clinic_id 
 ;
 
 --Number of scan/refinement appointments completed and cancelled
