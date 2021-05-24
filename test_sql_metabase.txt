@@ -41,11 +41,26 @@ from appointment; -- only june data is available
 
 select distinct state from appointment; -- completed, cancelled, date_scheduled
 
---Number of appointments completed or cancelled
 
-select count(1)
-from appointments
-where lower(ltrim(rtrim(state))) in ('completed', 'cancelled');
+
+-- number of appointsments via state
+select count(1), state
+from appointment
+group by state;
+
+
+--Number of appointments completed or cancelled , cancellation rate
+
+select clinic_id, count(1) as total_appointsments
+,COUNT(CASE WHEN appointment.state = 'completed' or appointment.state = 'cancelled' THEN 1  end) AS completed_or_cancelled_number
+,COUNT(CASE WHEN appointment.state = 'completed' THEN 1  end) AS completed_number
+,COUNT(CASE WHEN appointment.state = 'cancelled' THEN 1  end) AS cancelled_number
+,(COUNT(CASE WHEN appointment.state = 'cancelled' THEN 1  end)/count(1))*100 as cancellelation_rate
+from appointment
+left join clinic
+on clinic.id = appointment.clinic_id
+group by clinic_id
+;
 
 --Number of scan/refinement appointments completed and cancelled
 
