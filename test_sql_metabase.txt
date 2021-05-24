@@ -25,6 +25,13 @@ where ltrim(rtrim(lower(state))) in ("berlin", "bavaria");
 
 select *
 from appointment
-where extract(month from date_created) = 07 and extract(year from date_created) = 2020;
+where extract(month from date_created) = 07 and extract(year from date_created) = 2020; -- no data
 
+select extract(month from date_created),extract(year from date_created) 
+from appointment limit 10; -- just to see data
 
+select distinct extract(month from date_created)
+from appointment; -- only june data is available
+
+select distinct extract(year from date_created)
+from appointment; -- only june data is available
