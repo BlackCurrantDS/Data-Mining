@@ -55,7 +55,8 @@ select clinic_id, count(1) as total_appointsments
 ,COUNT(CASE WHEN appointment.state = 'completed' or appointment.state = 'cancelled' THEN 1  end) AS completed_or_cancelled_number
 ,COUNT(CASE WHEN appointment.state = 'completed' THEN 1  end) AS completed_number
 ,COUNT(CASE WHEN appointment.state = 'cancelled' THEN 1  end) AS cancelled_number
-,(COUNT(CASE WHEN appointment.state = 'cancelled' THEN 1  end)/count(1))*100 as cancellelation_rate
+,count(1) FILTER (WHERE appointment.state = 'scheduled') AS scheduled_number
+,(COUNT(CASE WHEN appointment.state = 'cancelled' THEN 1 end)/count(1))*100 as cancellelation_rate
 from appointment
 left join clinic
 on clinic.id = appointment.clinic_id
