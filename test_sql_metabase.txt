@@ -35,3 +35,43 @@ from appointment; -- only june data is available
 
 select distinct extract(year from date_created)
 from appointment; -- only june data is available
+
+select distinct extract(month from date_scheduled)
+from appointment; -- only june data is available
+
+select distinct state from appointment; -- completed, cancelled, date_scheduled
+
+--Number of appointments completed or cancelled
+
+select count(1)
+from appointments
+where lower(ltrim(rtrim(state))) in ('completed', 'cancelled');
+
+--Number of scan/refinement appointments completed and cancelled
+
+select count(1), state, type
+from appointment
+where lower(ltrim(rtrim(type))) in ('scan', 'refinement')
+group by state, type
+having lower(ltrim(rtrim(state))) in ('completed', 'cancelled')
+ ;
+
+--Number of completed appointments per member of staff
+
+
+select  clinic_id, count(1) as total_appointsments , count(1)/staff_headcount as per_head_count
+from appointment
+left join clinic
+on clinic.id = appointment.clinic_id
+where lower(ltrim(rtrim(appointment.state))) = 'completed'
+group by clinic_id,staff_headcount
+
+
+--Percent of total appointments that were cancelled
+
+--Percent of completed scans over monthly capacity
+
+--Rank of clinic cancellation_rate per clinic type, sorted ascending
+
+--Rank of capacity_rate per clinic type, sorted descending
+
