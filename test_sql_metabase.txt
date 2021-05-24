@@ -1,0 +1,30 @@
+--checking total records
+
+--select count(1) from appointment;
+
+--select count(1) from clinic;
+
+select clinic_id
+, city 
+, type as "clinic_type"
+, count() as "total"
+
+from appointment apt
+-- filtering state
+where lower(ltrim(rtrim(state)) in ("complete", "cancelled")
+and 
+left join clinic cl on cl.id = apt.clinic_id;
+
+-- Bavaria and Berlin clinics
+
+select *
+from clincis
+where ltrim(rtrim(lower(state))) in ("berlin", "bavaria");
+
+-- july 2020 month appointments
+
+select *
+from appointment
+where extract(month from date_created) = 07 and extract(year from date_created) = 2020;
+
+
