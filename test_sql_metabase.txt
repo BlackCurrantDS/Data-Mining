@@ -163,3 +163,22 @@ select clinic_id, city, clinic_type, completed_or_cancelled_number, completed_sc
 ,RANK() OVER (PARTITION BY clinic_type ORDER BY capacity_rate desc) AS capacity_rank 
  FROM 
      cancellelation_rate ORDER BY clinic_id;
+	 
+	 
+-- per head count
+select clinic.id, count(1) as completed_appointments , clinic.staff_headcount, count(1)/clinic.staff_headcount as per_head_count
+from clinic 
+left join appointment
+on clinic.id = appointment.clinic_id
+where lower(ltrim(rtrim(appointment.state))) = 'completed'
+group by clinic.id,staff_headcount;
+
+-- cancellation rate
+select clinic.id, count(1) as total_appointments
+,count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'cancelled') as cancelled
+, cast((cast(count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'cancelled') as DECIMAL)/cast(count(1) as DECIMAL))*100 AS DECIMAL(10,4)) as c_rate
+from clinic 
+left join appointment
+on clinic.id = appointment.clinic_id
+group by clinic.id
+order by clinic.id;
