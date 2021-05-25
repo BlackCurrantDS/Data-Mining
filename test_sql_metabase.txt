@@ -149,6 +149,7 @@ select clinic_id
 , count(1) FILTER (WHERE appointment.state = 'completed' and appointment.type = 'refinement') AS completed_refinement
 , count(1) FILTER (WHERE appointment.state = 'cancelled' and appointment.type = 'refinement') AS cancelled_refinement
 ,(count(1) FILTER (WHERE appointment.state = 'cancelled')/count(1))*100 as cancellelation_rate
+, count(1) FILTER (WHERE appointment.state = 'completed' and appointment.type = 'scan')/20 as capacity_rate
 
 from appointment
 left join clinic
@@ -159,7 +160,7 @@ order by clinic_id
 
 select clinic_id, city, type, total_appointments, completed_or_cancelled_number, completed_scans,cancelled_scans,completed_refinement,cancelled_refinement,cancellelation_rate
 ,RANK() OVER (PARTITION BY type ORDER BY cancellelation_rate desc) AS cancellelation_rank
+,capacity_rate
+,RANK() OVER (PARTITION BY type ORDER BY capacity_rate desc) AS capacity_rank 
  FROM 
      cancellelation_rate ORDER BY clinic_id;
-
-
