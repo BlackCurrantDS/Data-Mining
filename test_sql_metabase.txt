@@ -110,3 +110,29 @@ group by clinic_id
 
 --Rank of capacity_rate per clinic type, sorted descending
 
+--capacity_rate
+
+
+select  clinic_id, count(1) as completed_scans, coalesce(ROUND(COUNT(1) / 600,4),0) AS capacity_rate
+from appointment
+left join clinic
+on clinic.id = appointment.clinic_id
+where lower(ltrim(rtrim(appointment.state))) = 'completed'
+and lower(ltrim(rtrim(appointment.type))) = 'scan'
+group by clinic_id;
+
+WITH capacity_rate AS (
+   SELECT 
+       clinic_id, clinic.type as clinic_type ,count(1) as completed_scans, coalesce(ROUND(COUNT(1) / 600,4),0) AS capacity_rate
+from appointment
+left join clinic
+on clinic.id = appointment.clinic_id
+where lower(ltrim(rtrim(appointment.state))) = 'completed'
+and lower(ltrim(rtrim(appointment.type))) = 'scan'
+group by clinic_id,clinic_type)
+
+ SELECT clinic_id, clinic_type, completed_scans,  capacity_rate,
+     RANK() OVER (PARTITION BY clinic_type ORDER BY capacity_rate desc) AS caapacity_rank
+ FROM 
+     capacity_rate ORDER BY clinic_id;
+
