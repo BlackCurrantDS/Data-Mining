@@ -141,26 +141,25 @@ with cancellelation_rate as(
 
 select clinic_id
 , clinic.city as city
-, clinic.type as type
+, clinic.type as clinic_type
 ,count(1) as total_appointments
-,count(1) FILTER (WHERE appointment.state in('completed','cancelled')) AS completed_or_cancelled_number
-, count(1) FILTER (WHERE appointment.state = 'completed' and appointment.type = 'scan') AS completed_scans
-, count(1) FILTER (WHERE appointment.state = 'cancelled' and appointment.type = 'scan') AS cancelled_scans
-, count(1) FILTER (WHERE appointment.state = 'completed' and appointment.type = 'refinement') AS completed_refinement
-, count(1) FILTER (WHERE appointment.state = 'cancelled' and appointment.type = 'refinement') AS cancelled_refinement
-,(count(1) FILTER (WHERE appointment.state = 'cancelled')/count(1))*100 as cancellelation_rate
-, count(1) FILTER (WHERE appointment.state = 'completed' and appointment.type = 'scan')/20 as capacity_rate
-
-from appointment
-left join clinic
+, count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'completed' or lower(ltrim(rtrim(appointment.state))) = 'cancelled') AS completed_or_cancelled_number
+, count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'completed' and lower(ltrim(rtrim(appointment.type))) = 'scan') AS completed_scans
+, count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'cancelled' and lower(ltrim(rtrim(appointment.type))) = 'scan') AS cancelled_scans
+, count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'completed' and lower(ltrim(rtrim(appointment.type))) = 'refinement') AS completed_refinement
+, count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'cancelled' and lower(ltrim(rtrim(appointment.type))) = 'refinement') AS cancelled_refinement
+,(count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'cancelled')/count(1))*100 as cancellelation_rate
+, count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'completed' and appointment.type = 'scan')/20 as capacity_rate
+from clinic -- to get all the clicnic data for those there might be no appointments yet
+left join appointment
 on clinic.id = appointment.clinic_id
 group by clinic_id, clinic.city, clinic.type
 order by clinic_id 
 )
 
-select clinic_id, city, type, total_appointments, completed_or_cancelled_number, completed_scans,cancelled_scans,completed_refinement,cancelled_refinement,cancellelation_rate
-,RANK() OVER (PARTITION BY type ORDER BY cancellelation_rate desc) AS cancellelation_rank
+select clinic_id, city, clinic_type, completed_or_cancelled_number, completed_scans,cancelled_scans,completed_refinement,cancelled_refinement,cancellelation_rate
+,RANK() OVER (PARTITION BY clinic_type ORDER BY cancellelation_rate desc) AS cancellelation_rank
 ,capacity_rate
-,RANK() OVER (PARTITION BY type ORDER BY capacity_rate desc) AS capacity_rank 
+,RANK() OVER (PARTITION BY clinic_type ORDER BY capacity_rate desc) AS capacity_rank 
  FROM 
      cancellelation_rate ORDER BY clinic_id;
