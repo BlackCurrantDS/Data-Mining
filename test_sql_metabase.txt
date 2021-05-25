@@ -159,10 +159,17 @@ group by clinic_id, clinic.city, clinic.type, extract(month from date_scheduled)
 order by clinic_id 
 )
 
-select clinic_id, city, clinic_type, month_, year_,completed_or_cancelled_number, completed_scans,cancelled_scans,completed_refinement,cancelled_refinement,cancellelation_rate
-,RANK() OVER (PARTITION BY clinic_type ORDER BY cancellelation_rate desc) AS cancellelation_rank
+select 
+clinic_id
+, city
+, clinic_type
+, month_
+, year_
+,completed_or_cancelled_number, completed_scans,cancelled_scans,completed_refinement,cancelled_refinement
+,cancellelation_rate
+,dense_rank() OVER (PARTITION BY clinic_type ORDER BY cancellelation_rate asc) AS cancellelation_rank
 ,capacity_rate
-,RANK() OVER (PARTITION BY clinic_type ORDER BY capacity_rate desc) AS capacity_rank 
+,dense_rank() OVER (PARTITION BY clinic_type ORDER BY capacity_rate desc) AS capacity_rank 
  FROM 
      cancellelation_rate ORDER BY clinic_id;
 
