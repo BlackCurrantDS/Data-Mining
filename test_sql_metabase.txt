@@ -41,7 +41,12 @@ from appointment; -- only june data is available
 
 select distinct state from appointment; -- completed, cancelled, date_scheduled
 
-
+select extract(month from date_scheduled),extract(year from date_created)
+from appointment
+where --extract(month from date_scheduled) = 7 and 
+extract(year from date_created) = 2020
+limit 10;
+ 
 
 -- number of appointsments via state
 select count(1), state
