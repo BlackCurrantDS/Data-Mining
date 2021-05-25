@@ -207,11 +207,12 @@ states_and_rates.clinic_id
 , clinic_type
 , month_
 , year_
-,completed_or_cancelled_number, completed_scans,cancelled_scans,completed_refinement,cancelled_refinement
+,completed_or_cancelled_number as total, completed_scans,cancelled_scans,completed_refinement,cancelled_refinement
 ,cancellelation_rate
 ,dense_rank() OVER (PARTITION BY clinic_type ORDER BY cancellelation_rate asc) AS cancellelation_rank
 ,capacity_rate
 ,dense_rank() OVER (PARTITION BY clinic_type ORDER BY capacity_rate desc) AS capacity_rank 
+,per_head_count.per_head_count
  FROM 
      states_and_rates 
 left join per_head_count
