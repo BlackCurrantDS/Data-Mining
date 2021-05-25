@@ -95,6 +95,17 @@ group by clinic_id,staff_headcount
 
 --Percent of completed scans over monthly capacity
 
+--capacity_rate
+
+
+select  clinic_id, count(1) as completed_scans, coalesce(ROUND(COUNT(1) / 600,4),0) AS capacity_rate
+from appointment
+left join clinic
+on clinic.id = appointment.clinic_id
+where lower(ltrim(rtrim(appointment.state))) = 'completed'
+and lower(ltrim(rtrim(appointment.type))) = 'scan'
+group by clinic_id
+
 --Rank of clinic cancellation_rate per clinic type, sorted ascending
 
 --Rank of capacity_rate per clinic type, sorted descending
