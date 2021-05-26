@@ -174,6 +174,7 @@ order by clinic.id;
 
 
 
+
 -- ad-hoc clinic-appoitnment query
 
 
@@ -190,10 +191,9 @@ with vars as (
 
 , states_and_rates as(
 
-select clinic_id
-, clinic.state
-, clinic.city as city
-, clinic.type as clinic_type
+select 
+
+clinic_id
 
 -- adding month and year to be able to analyse for other months as well , can uncomment
 --, extract(month from date_scheduled) as month_
@@ -204,6 +204,7 @@ select clinic_id
 -- number of appointments based on various states and type
 
 -- ltrim, rtrim for data quality check as i was told company has it
+, count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'completed') AS completed
 , count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'completed' or lower(ltrim(rtrim(appointment.state))) = 'cancelled') AS completed_or_cancelled_number
 , count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'completed' and lower(ltrim(rtrim(appointment.type))) = 'scan') AS completed_scans
 , count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'cancelled' and lower(ltrim(rtrim(appointment.type))) = 'scan') AS cancelled_scans
@@ -227,39 +228,17 @@ where extract(month from date_scheduled)= 7
 and extract(year from date_scheduled) = 2020 
 and upper(ltrim(rtrim(clinic.state))) in ('BL', 'BY')
 
-group by clinic_id,clinic.state, clinic.city, clinic.type, extract(month from date_scheduled), extract(year from date_scheduled)
+group by clinic_id--, extract(month from date_scheduled), extract(year from date_scheduled) this is not required right now because of filter
 
 order by clinic_id 
-)
-
---Number of completed appointments per member of staff
-, per_head_count as
-(
-select clinic.id as clinic_id
-
---Number of completed appointments per member of staff, total completed appointment in a clinic/number of people in that clinic
-,count(1)/clinic.staff_headcount as per_head_count
-
-from clinic 
-left join appointment
-on clinic.id = appointment.clinic_id
-
--- already filtering completed 
-where lower(ltrim(rtrim(appointment.state))) = 'completed' 
-and extract(month from date_scheduled)= 7  
-and extract(year from date_scheduled) = 2020 
-and upper(ltrim(rtrim(clinic.state))) in ('BL', 'BY')
-
-group by clinic.id,clinic.state,clinic.city, clinic.type,staff_headcount,extract(month from date_scheduled),extract(year from date_scheduled)
-
 )
 
 
 select 
 
-states_and_rates.clinic_id
+clinic.id  as clinic_id
 , city
-, clinic_type
+, type as clinic_type
 --, month_
 --, year_
 , completed_or_cancelled_number as total
@@ -267,18 +246,20 @@ states_and_rates.clinic_id
 ,cancelled_scans
 ,completed_refinement
 ,cancelled_refinement
-,per_head_count.per_head_count as appointments_per_staff
+
+,completed/staff_headcount as appointments_per_staff
+
 ,cancellelation_rate
 ,capacity_rate
 
 -- ranking clinic in ascneidng based on their cancellation rates
-,dense_rank() OVER (PARTITION BY clinic_type ORDER BY cancellelation_rate asc) AS cancellelation_rank
+,dense_rank() OVER (PARTITION BY type ORDER BY cancellelation_rate asc) AS cancellelation_rank
 
 -- ranking clinic in desecnding based on their capacity rates
-,dense_rank() OVER (PARTITION BY clinic_type ORDER BY capacity_rate desc) AS capacity_rank 
+,dense_rank() OVER (PARTITION BY type ORDER BY capacity_rate desc) AS capacity_rank 
 
 from 
-states_and_rates 
-left join per_head_count
-on states_and_rates.clinic_id = per_head_count.clinic_id
+clinic
+left join states_and_rates
+on clinic.id = states_and_rates.clinic_id
 ORDER BY clinic_id;
