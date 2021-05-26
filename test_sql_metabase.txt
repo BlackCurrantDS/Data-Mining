@@ -176,6 +176,7 @@ order by clinic.id;
 with states_and_rates as(
 
 select clinic_id
+, clinic.state
 , clinic.city as city
 , clinic.type as clinic_type
 , extract(month from date_scheduled) as month_
@@ -191,8 +192,8 @@ select clinic_id
 from clinic -- to get all the clicnic data for those there might be no appointments yet
 left join appointment
 on clinic.id = appointment.clinic_id
-group by clinic_id, clinic.city, clinic.type, extract(month from date_scheduled), extract(year from date_scheduled)
-having extract(month from date_scheduled)= 7  and extract(year from date_scheduled) = 2020
+group by clinic_id,clinic.state, clinic.city, clinic.type, extract(month from date_scheduled), extract(year from date_scheduled)
+having extract(month from date_scheduled)= 7  and extract(year from date_scheduled) = 2020 and upper(ltrim(rtrim(clinic.state))) in ('BL', 'BY')
 order by clinic_id 
 )
 
@@ -204,8 +205,8 @@ from clinic
 left join appointment
 on clinic.id = appointment.clinic_id
 where lower(ltrim(rtrim(appointment.state))) = 'completed' 
-group by clinic.id,staff_headcount,extract(month from date_scheduled),extract(year from date_scheduled)
-having extract(month from date_scheduled)= 7 and extract(year from date_scheduled) = 2020
+group by clinic.id,clinic.state,staff_headcount,extract(month from date_scheduled),extract(year from date_scheduled)
+having extract(month from date_scheduled)= 7 and extract(year from date_scheduled) = 2020 and upper(ltrim(rtrim(clinic.state))) in ('BL', 'BY')
 )
 
 
@@ -216,18 +217,14 @@ states_and_rates.clinic_id
 --, month_
 --, year_
 ,completed_or_cancelled_number as total, completed_scans,cancelled_scans,completed_refinement,cancelled_refinement
+,per_head_count.per_head_count as appointments_per_staff
 ,cancellelation_rate
-,dense_rank() OVER (PARTITION BY clinic_type ORDER BY cancellelation_rate asc) AS cancellelation_rank
 ,capacity_rate
+,dense_rank() OVER (PARTITION BY clinic_type ORDER BY cancellelation_rate asc) AS cancellelation_rank
 ,dense_rank() OVER (PARTITION BY clinic_type ORDER BY capacity_rate desc) AS capacity_rank 
-,per_head_count.per_head_count
+
  FROM 
      states_and_rates 
 left join per_head_count
 on states_and_rates.clinic_id = per_head_count.clinic_id
 ORDER BY clinic_id;
-
-
-
-
-
