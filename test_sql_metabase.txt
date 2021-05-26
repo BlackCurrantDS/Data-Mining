@@ -237,20 +237,21 @@ order by clinic_id
 select 
 
 clinic.id  as clinic_id
-, city
-, type as clinic_type
+, clinic.city
+, clinic.type as clinic_type
 --, month_
 --, year_
 , completed_or_cancelled_number as total
 , completed_scans
-,cancelled_scans
-,completed_refinement
-,cancelled_refinement
+, cancelled_scans
+, completed_refinement
+, cancelled_refinement
 
-,completed/staff_headcount as appointments_per_staff
+--Number of completed appointments per member of staff
+, completed/staff_headcount as appointments_per_staff
 
-,cancellelation_rate
-,capacity_rate
+, cancellelation_rate
+, capacity_rate
 
 -- ranking clinic in ascneidng based on their cancellation rates
 ,dense_rank() OVER (PARTITION BY type ORDER BY cancellelation_rate asc) AS cancellelation_rank
