@@ -179,48 +179,77 @@ select clinic_id
 , clinic.state
 , clinic.city as city
 , clinic.type as clinic_type
-, extract(month from date_scheduled) as month_
-, extract(year from date_scheduled) as year_
-,count(1) as total_appointments
+
+-- adding month and year to be able to analyse for other months as well , can uncomment
+--, extract(month from date_scheduled) as month_
+--, extract(year from date_scheduled) as year_
+
+--,count(1) as total_appointments #added to see total number of appointments
+
+-- number of appointments based on various states and type
 , count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'completed' or lower(ltrim(rtrim(appointment.state))) = 'cancelled') AS completed_or_cancelled_number
 , count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'completed' and lower(ltrim(rtrim(appointment.type))) = 'scan') AS completed_scans
 , count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'cancelled' and lower(ltrim(rtrim(appointment.type))) = 'scan') AS cancelled_scans
 , count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'completed' and lower(ltrim(rtrim(appointment.type))) = 'refinement') AS completed_refinement
 , count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'cancelled' and lower(ltrim(rtrim(appointment.type))) = 'refinement') AS cancelled_refinement
+
+--Percent of total appointments that were cancelled, total cancelled/total appointments 
 , cast((cast(count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'cancelled') as DECIMAL)/cast(count(1) as DECIMAL))*100 AS DECIMAL(10,4)) as cancellelation_rate
+
+--Percent of completed scans over monthly capacity, total completed scans/ per month capacity of a clinic, given, 30 days a month, and 20 appointments per day capacity
 , cast((cast(count(1) FILTER (WHERE lower(ltrim(rtrim(appointment.state))) = 'completed' and lower(ltrim(rtrim(appointment.type))) = 'scan') as DECIMAL)/600)*100 AS DECIMAL(10,4)) as capacity_rate
+
+
 from clinic -- to get all the clicnic data for those there might be no appointments yet
 left join appointment
-on clinic.id = appointment.clinic_id
+on clinic.id = appointment.clinic_id 
 group by clinic_id,clinic.state, clinic.city, clinic.type, extract(month from date_scheduled), extract(year from date_scheduled)
+-- filter conditions on state of bavaria and berlin and mont/year july , 2020
 having extract(month from date_scheduled)= 7  and extract(year from date_scheduled) = 2020 and upper(ltrim(rtrim(clinic.state))) in ('BL', 'BY')
 order by clinic_id 
 )
 
+--Number of completed appointments per member of staff
 , per_head_count as
 (
 select clinic.id as clinic_id
+
+--Number of completed appointments per member of staff, total completed appointment in a clinic/number of people in that clinic
 ,count(1)/clinic.staff_headcount as per_head_count
+
 from clinic 
 left join appointment
 on clinic.id = appointment.clinic_id
+
+-- already filtering completed 
 where lower(ltrim(rtrim(appointment.state))) = 'completed' 
+
 group by clinic.id,clinic.state,staff_headcount,extract(month from date_scheduled),extract(year from date_scheduled)
+
 having extract(month from date_scheduled)= 7 and extract(year from date_scheduled) = 2020 and upper(ltrim(rtrim(clinic.state))) in ('BL', 'BY')
 )
 
 
 select 
+
 states_and_rates.clinic_id
 , city
 , clinic_type
 --, month_
 --, year_
-,completed_or_cancelled_number as total, completed_scans,cancelled_scans,completed_refinement,cancelled_refinement
+, completed_or_cancelled_number as total
+, completed_scans
+,cancelled_scans
+,completed_refinement
+,cancelled_refinement
 ,per_head_count.per_head_count as appointments_per_staff
 ,cancellelation_rate
 ,capacity_rate
+
+-- ranking clinich in ascneidng based on their cancellation rates
 ,dense_rank() OVER (PARTITION BY clinic_type ORDER BY cancellelation_rate asc) AS cancellelation_rank
+
+-- ranking clinich in ascneidng based on their capacity rates
 ,dense_rank() OVER (PARTITION BY clinic_type ORDER BY capacity_rate desc) AS capacity_rank 
 
  FROM 
