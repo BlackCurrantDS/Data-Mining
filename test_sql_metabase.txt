@@ -207,10 +207,10 @@ select clinic_id
 
 from clinic -- to get all the clicnic data for those there might be no appointments yet
 left join appointment
-on clinic.id = appointment.clinic_id 
+on clinic.id = appointment.clinic_id
+where extract(month from date_scheduled)= 7  and extract(year from date_scheduled) = 2020 and upper(ltrim(rtrim(clinic.state))) in ('BL', 'BY')
 group by clinic_id,clinic.state, clinic.city, clinic.type, extract(month from date_scheduled), extract(year from date_scheduled)
 -- filter conditions on state of bavaria and berlin and mont/year july , 2020
-having extract(month from date_scheduled)= 7  and extract(year from date_scheduled) = 2020 and upper(ltrim(rtrim(clinic.state))) in ('BL', 'BY')
 order by clinic_id 
 )
 
@@ -227,11 +227,10 @@ left join appointment
 on clinic.id = appointment.clinic_id
 
 -- already filtering completed 
-where lower(ltrim(rtrim(appointment.state))) = 'completed' 
+where lower(ltrim(rtrim(appointment.state))) = 'completed' and extract(month from date_scheduled)= 7  and extract(year from date_scheduled) = 2020 and upper(ltrim(rtrim(clinic.state))) in ('BL', 'BY')
 
 group by clinic.id,clinic.state,staff_headcount,extract(month from date_scheduled),extract(year from date_scheduled)
 
-having extract(month from date_scheduled)= 7 and extract(year from date_scheduled) = 2020 and upper(ltrim(rtrim(clinic.state))) in ('BL', 'BY')
 )
 
 
