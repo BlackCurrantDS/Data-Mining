@@ -1,14 +1,7 @@
 # Data-Mining
 
-A quick analysis on Company's slogans using Python. 
+Data analysis, report and insights generation using PowerBI, Tableau Reports and Dashboards
 
-  starter-slogan-dataset-ffa80249-6.ipynb
+EDA on various datasets using Python
 
-Implnentation of Bi-secting K-means algorithm using exisiting Sklearn K-means.
-
-  Bisecting_K_means.ipynb
-  
-Data analysis, report and insgits generation for a small  business-
-  Database query to get data, test_sql_metabase.txt
-  Report in PowerBI, shops_appointments.pbix
-  Report generated in PDF, shops_appointments.pdf
+Classification tasks using CNN
